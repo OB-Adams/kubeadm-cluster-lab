@@ -9,7 +9,7 @@ The project is also preparation for the Certified Kubernetes Administrator (CKA)
 | Milestone | Scope | Status |
 |---|---|---|
 | 1. Node preparation | Ansible role: time sync, swap, kernel modules, sysctls, firewalld, containerd, pinned kube packages | Complete |
-| 2. Bootstrap | `kubeadm init`, worker joins, what kubeadm creates | Planned |
+| 2. Bootstrap | `kubeadm init`, worker joins, what kubeadm creates | Complete |
 | 3. Networking | Calico CNI, MetalLB, Gateway API | Planned |
 | 4. Storage | NFS server, csi-driver-nfs dynamic provisioning | Planned |
 | 5. Workloads | Deployment, Postgres StatefulSet, RBAC-limited user, NetworkPolicy | Planned |
@@ -45,8 +45,10 @@ The diagram grows with each milestone. Milestone-specific diagrams live in `docs
 | Nodes | 3 VMs, CentOS Stream 10 (EL10, kernel 6.12, aarch64), 2 vCPU and 4 GB RAM each |
 | Kubernetes | 1.36.4 from pkgs.k8s.io |
 | Container runtime | containerd (containerd.io package), systemd cgroup driver |
+| API endpoint | `k8s-api:6443` (resolves to k8s-cp1; ready to move to a kube-vip address) |
 | Pod CIDR / Service CIDR | 10.244.0.0/16 / 10.96.0.0/12 |
-| CNI (milestone 3) | Calico, native BGP routing, no encapsulation |
+| kube-proxy | nftables mode |
+| CNI (milestone 3) | Calico, nftables data plane, native BGP routing, no encapsulation |
 | Security baseline | SELinux enforcing, firewalld running |
 
 ## Repository structure
@@ -56,6 +58,9 @@ kubeadm-cluster-lab/
 ├── README.md
 ├── ansible.cfg
 ├── requirements.yml              # Ansible collections
+├── kubeadm/
+│   ├── kubeadm-config.yaml       # kubeadm init configuration (v1beta4)
+│   └── patches/                  # static Pod patches: control plane runs as spc_t
 ├── inventory/
 │   ├── hosts.yml                 # control_plane and workers groups
 │   └── group_vars/all.yml        # versions, CIDRs, firewall ports
@@ -68,7 +73,8 @@ kubeadm-cluster-lab/
 │   ├── run.sh                    # session logging helper
 │   └── verify-node-prep.sh       # per-node acceptance checks
 ├── docs/
-│   └── milestone-1-node-prep.md
+│   ├── milestone-1-node-prep.md
+│   └── milestone-2-bootstrap.md
 ├── logs/                         # recorded session logs
 └── screenshots/
 ```

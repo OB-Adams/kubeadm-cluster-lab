@@ -1,0 +1,14 @@
+
+[2026-11-25 18:12:47] $ scp kubeadm/kubeadm-config.yaml root@192.168.0.110:/root/kubeadm-config.yaml
+[18:12:47] exit=0
+
+[2026-11-25 18:13:24] $ ssh root@192.168.0.110 kubeadm config validate --config /root/kubeadm-config.yaml
+ok
+[18:13:25] exit=0
+
+[2026-11-25 18:14:03] $ ssh root@192.168.0.110 matchpathcon /etc/kubernetes /etc/kubernetes/pki /var/lib/etcd /var/lib/kubelet
+/etc/kubernetes	system_u:object_r:kubernetes_file_t:s0
+/etc/kubernetes/pki	system_u:object_r:kubernetes_file_t:s0
+/var/lib/etcd	system_u:object_r:var_lib_t:s0
+/var/lib/kubelet	system_u:object_r:container_var_lib_t:s0
+[18:14:03] exit=0
