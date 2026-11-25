@@ -1,0 +1,66 @@
+---
+- name: Add the Docker CE repository (provides containerd.io)
+  ansible.builtin.yum_repository:
+    name: docker-ce-stable
+    description: Docker CE Stable
+    baseurl: "{{ node_prep_docker_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ node_prep_docker_repo_gpgkey }}"
+    enabled: true
+
+- name: Install containerd
+  ansible.builtin.dnf:
+    name: containerd.io
+    state: present
+
+# The containerd.io package ships a config.toml with the CRI plugin disabled.
+# The config is rebuilt from the installed binary's defaults so the plugin
+# paths always match the containerd version, then two defaults are changed:
+# the systemd cgroup driver, and SELinux labelling of containers (off by
+# default, which would leave containers unconfined on an enforcing host).
+- name: Read containerd's default configuration
+  ansible.builtin.command: containerd config default
+  register: node_prep_containerd_default
+  changed_when: false
+  check_mode: false
+
+- name: Set the systemd cgroup driver and SELinux labelling
+  ansible.builtin.set_fact:
+    node_prep_containerd_config: >-
+      {{ node_prep_containerd_default.stdout
+         | regex_replace('SystemdCgroup = false', 'SystemdCgroup = true')
+         | regex_replace('enable_selinux = false', 'enable_selinux = true') }}
+
+- name: Assert both settings are present
+  ansible.builtin.assert:
+    that:
+      - "'SystemdCgroup = true' in node_prep_containerd_config"
+      - "'enable_selinux = true' in node_prep_containerd_config"
+    fail_msg: "SystemdCgroup or enable_selinux was not found in the containerd default config. Inspect 'containerd config default' on {{ inventory_hostname }}."
+    quiet: true
+
+- name: Write /etc/containerd/config.toml
+  ansible.builtin.copy:
+    content: "{{ node_prep_containerd_config }}\n"
+    dest: /etc/containerd/config.toml
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart containerd
+
+- name: Point crictl at containerd
+  ansible.builtin.template:
+    src: crictl.yaml.j2
+    dest: /etc/crictl.yaml
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Ensure containerd is running and enabled
+  ansible.builtin.systemd_service:
+    name: containerd
+    state: started
+    enabled: true
+
+- name: Apply containerd config changes before installing Kubernetes
+  ansible.builtin.meta: flush_handlers

@@ -1,0 +1,21 @@
+# Ansible
+*.retry
+.ansible/
+collections/
+
+# Secrets and cluster credentials
+.env
+*.vault
+vault-password*
+*.kubeconfig
+admin.conf
+super-admin.conf
+*.key
+*.pem
+
+# Editors and OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*~

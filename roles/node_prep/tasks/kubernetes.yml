@@ -1,0 +1,32 @@
+---
+- name: Add the pkgs.k8s.io repository for Kubernetes {{ k8s_minor_version }}
+  ansible.builtin.yum_repository:
+    name: kubernetes
+    description: Kubernetes {{ k8s_minor_version }}
+    baseurl: "{{ node_prep_k8s_repo_url }}"
+    gpgcheck: true
+    gpgkey: "{{ node_prep_k8s_repo_url }}repodata/repomd.xml.key"
+    enabled: true
+    exclude: "{{ node_prep_k8s_repo_exclude }}"
+
+# The exclude line keeps routine 'dnf upgrade' runs away from these packages.
+# disable_excludes lifts it for this deliberate, version-pinned install.
+- name: Install kubelet, kubeadm and kubectl {{ k8s_version }}
+  ansible.builtin.dnf:
+    name: "{{ node_prep_k8s_packages | map('regex_replace', '$', '-' ~ k8s_version) | list }}"
+    state: present
+    disable_excludes: kubernetes
+
+# kubeadm no longer depends on cri-tools, so crictl is installed explicitly.
+# The repository only carries the matching minor version.
+- name: Install cri-tools (crictl)
+  ansible.builtin.dnf:
+    name: cri-tools
+    state: present
+    disable_excludes: kubernetes
+
+# kubelet restarts in a loop until kubeadm init/join writes its config.
+- name: Enable kubelet
+  ansible.builtin.systemd_service:
+    name: kubelet
+    enabled: true

@@ -1,0 +1,31 @@
+---
+- name: Verify node preparation
+  hosts: k8s_cluster
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Run node checks
+      ansible.builtin.script:
+        cmd: "{{ playbook_dir }}/../scripts/verify-node-prep.sh"
+      environment:
+        NODE_NAME: "{{ inventory_hostname }}"
+        NODE_ROLE: "{{ 'control_plane' if 'control_plane' in group_names else 'worker' }}"
+        EXPECTED_OS_ID: "{{ node_os_id }}"
+        EXPECTED_OS_MAJOR: "{{ node_os_major }}"
+        EXPECTED_VERSION: "{{ k8s_version }}"
+        POD_CIDR: "{{ pod_cidr }}"
+        FW_ZONE: "{{ fw_zone }}"
+        EXPECTED_PORTS: "{{ node_fw_ports | join(' ') }}"
+        NODES: "{{ groups['k8s_cluster'] | join(' ') }}"
+      register: node_prep_verify
+      changed_when: false
+      failed_when: false
+
+    - name: Show check results
+      ansible.builtin.debug:
+        var: node_prep_verify.stdout_lines
+
+    - name: Fail if any check failed
+      ansible.builtin.fail:
+        msg: "{{ inventory_hostname }} has failing checks, see the output above"
+      when: node_prep_verify.rc != 0

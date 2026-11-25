@@ -1,0 +1,33 @@
+---
+- name: Install chrony
+  ansible.builtin.dnf:
+    name: chrony
+    state: present
+
+# The default 'makestep 1.0 3' only steps the clock during the first three
+# updates after chronyd starts and slews afterwards. A paused VM can resume
+# hours behind, which slewing would take years to correct.
+- name: Let chronyd step the clock whenever it is off by more than 1 second
+  ansible.builtin.lineinfile:
+    path: /etc/chrony.conf
+    regexp: '^makestep\s'
+    line: "makestep {{ node_prep_chrony_makestep }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chronyd
+
+- name: Ensure chronyd is running and enabled
+  ansible.builtin.systemd_service:
+    name: chronyd
+    state: started
+    enabled: true
+
+- name: Apply chrony config changes now
+  ansible.builtin.meta: flush_handlers
+
+# Certificates and TLS to the package repositories depend on correct time,
+# so the play waits here for chronyd to synchronise before going further.
+- name: Wait for the clock to synchronise
+  ansible.builtin.command: chronyc waitsync {{ node_prep_chrony_waitsync_tries }} 1
+  changed_when: false

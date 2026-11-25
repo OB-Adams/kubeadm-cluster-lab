@@ -1,0 +1,39 @@
+---
+# chrony: step whenever the offset exceeds 1 second, with no limit on how
+# often. waitsync polls every 10 seconds, so 30 tries waits up to 5 minutes.
+node_prep_chrony_makestep: "1 -1"
+node_prep_chrony_waitsync_tries: 30
+
+node_prep_kernel_modules:
+  - overlay
+  - br_netfilter
+
+node_prep_sysctls:
+  net.ipv4.ip_forward: 1
+  net.bridge.bridge-nf-call-iptables: 1
+  net.bridge.bridge-nf-call-ip6tables: 1
+
+# Tools kubeadm preflight checks for, plus the SELinux policy for containers.
+node_prep_base_packages:
+  - conntrack-tools
+  - socat
+  - iproute-tc
+  - iptables-nft
+  - container-selinux
+
+node_prep_containerd_socket: unix:///run/containerd/containerd.sock
+
+node_prep_docker_repo_url: "https://download.docker.com/linux/centos/{{ ansible_facts['distribution_major_version'] }}/$basearch/stable"
+node_prep_docker_repo_gpgkey: https://download.docker.com/linux/centos/gpg
+
+node_prep_k8s_repo_url: "https://pkgs.k8s.io/core:/stable:/v{{ k8s_minor_version }}/rpm/"
+node_prep_k8s_packages:
+  - kubelet
+  - kubeadm
+  - kubectl
+node_prep_k8s_repo_exclude:
+  - kubelet
+  - kubeadm
+  - kubectl
+  - cri-tools
+  - kubernetes-cni

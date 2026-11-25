@@ -1,0 +1,730 @@
+
+[2026-11-25 13:07:04] $ ansible-inventory --graph
+@all:
+  |--@ungrouped:
+  |--@k8s_cluster:
+  |  |--@control_plane:
+  |  |  |--k8s-cp1
+  |  |--@workers:
+  |  |  |--k8s-w1
+  |  |  |--k8s-w2
+[13:07:05] exit=0
+
+[2026-11-25 13:07:18] $ ansible-playbook playbooks/node-prep.yml
+
+PLAY [Prepare CentOS Stream 10 nodes for kubeadm] ******************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [k8s-w2]
+ok: [k8s-cp1]
+ok: [k8s-w1]
+
+TASK [node_prep : Assert the host runs the expected operating system] **********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Assert SELinux is enforcing] *********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Install chrony] **********************************************
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Let chronyd step the clock whenever it is off by more than 1 second] ***
+changed: [k8s-w1]
+changed: [k8s-cp1]
+changed: [k8s-w2]
+
+TASK [node_prep : Ensure chronyd is running and enabled] ***********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+RUNNING HANDLER [node_prep : Restart chronyd] **********************************
+changed: [k8s-cp1]
+changed: [k8s-w1]
+changed: [k8s-w2]
+
+TASK [node_prep : Wait for the clock to synchronise] ***************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Set the hostname to the inventory name] **********************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Add every cluster node to /etc/hosts] ************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Turn off active swap] ****************************************
+skipping: [k8s-cp1]
+skipping: [k8s-w1]
+skipping: [k8s-w2]
+
+TASK [node_prep : Comment out swap entries in /etc/fstab] **********************
+ok: [k8s-w2]
+ok: [k8s-cp1]
+ok: [k8s-w1]
+
+TASK [node_prep : Load required kernel modules at boot] ************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Load required kernel modules now] ****************************
+ok: [k8s-w1] => (item=overlay)
+ok: [k8s-w2] => (item=overlay)
+ok: [k8s-cp1] => (item=overlay)
+ok: [k8s-w1] => (item=br_netfilter)
+ok: [k8s-cp1] => (item=br_netfilter)
+ok: [k8s-w2] => (item=br_netfilter)
+
+TASK [node_prep : Apply Kubernetes networking sysctls] *************************
+ok: [k8s-w1] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-cp1] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-w1] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-cp1] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+ok: [k8s-cp1] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+ok: [k8s-w1] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+
+TASK [node_prep : Install node prerequisites] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Install firewalld] *******************************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Ensure firewalld is running and enabled] *********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Open the ports this node needs] ******************************
+ok: [k8s-cp1] => (item=10250/tcp)
+ok: [k8s-w2] => (item=10250/tcp)
+ok: [k8s-w1] => (item=10250/tcp)
+ok: [k8s-w2] => (item=10256/tcp)
+ok: [k8s-w1] => (item=10256/tcp)
+ok: [k8s-cp1] => (item=10256/tcp)
+ok: [k8s-w2] => (item=30000-32767/tcp)
+ok: [k8s-cp1] => (item=30000-32767/tcp)
+ok: [k8s-w1] => (item=30000-32767/tcp)
+ok: [k8s-w1] => (item=30000-32767/udp)
+ok: [k8s-w2] => (item=30000-32767/udp)
+ok: [k8s-cp1] => (item=30000-32767/udp)
+ok: [k8s-w1] => (item=179/tcp)
+ok: [k8s-cp1] => (item=179/tcp)
+ok: [k8s-w2] => (item=179/tcp)
+ok: [k8s-cp1] => (item=6443/tcp)
+ok: [k8s-cp1] => (item=2379-2380/tcp)
+ok: [k8s-cp1] => (item=10257/tcp)
+ok: [k8s-cp1] => (item=10259/tcp)
+
+TASK [node_prep : Trust traffic from the pod network] **************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Add the Docker CE repository (provides containerd.io)] *******
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Install containerd] ******************************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Read containerd's default configuration] *********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Set the systemd cgroup driver and SELinux labelling] *********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Assert both settings are present] ****************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Write /etc/containerd/config.toml] ***************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Point crictl at containerd] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Ensure containerd is running and enabled] ********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Add the pkgs.k8s.io repository for Kubernetes 1.36] **********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Install kubelet, kubeadm and kubectl 1.36.4] *****************
+ok: [k8s-w1]
+ok: [k8s-w2]
+ok: [k8s-cp1]
+
+TASK [node_prep : Install cri-tools (crictl)] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Enable kubelet] **********************************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+PLAY RECAP *********************************************************************
+k8s-cp1                    : ok=31   changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w1                     : ok=31   changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w2                     : ok=31   changed=2    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+[13:07:42] exit=0
+
+[2026-11-25 13:07:51] $ ansible-playbook playbooks/node-prep.yml
+
+PLAY [Prepare CentOS Stream 10 nodes for kubeadm] ******************************
+
+TASK [Gathering Facts] *********************************************************
+ok: [k8s-w2]
+ok: [k8s-cp1]
+ok: [k8s-w1]
+
+TASK [node_prep : Assert the host runs the expected operating system] **********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Assert SELinux is enforcing] *********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Install chrony] **********************************************
+ok: [k8s-w1]
+ok: [k8s-w2]
+ok: [k8s-cp1]
+
+TASK [node_prep : Let chronyd step the clock whenever it is off by more than 1 second] ***
+ok: [k8s-w2]
+ok: [k8s-cp1]
+ok: [k8s-w1]
+
+TASK [node_prep : Ensure chronyd is running and enabled] ***********************
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+TASK [node_prep : Apply chrony config changes now] *****************************
+
+TASK [node_prep : Wait for the clock to synchronise] ***************************
+ok: [k8s-w1]
+ok: [k8s-w2]
+ok: [k8s-cp1]
+
+TASK [node_prep : Set the hostname to the inventory name] **********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Add every cluster node to /etc/hosts] ************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Turn off active swap] ****************************************
+skipping: [k8s-cp1]
+skipping: [k8s-w1]
+skipping: [k8s-w2]
+
+TASK [node_prep : Comment out swap entries in /etc/fstab] **********************
+ok: [k8s-w1]
+ok: [k8s-w2]
+ok: [k8s-cp1]
+
+TASK [node_prep : Load required kernel modules at boot] ************************
+ok: [k8s-w2]
+ok: [k8s-w1]
+ok: [k8s-cp1]
+
+TASK [node_prep : Load required kernel modules now] ****************************
+ok: [k8s-cp1] => (item=overlay)
+ok: [k8s-w1] => (item=overlay)
+ok: [k8s-w2] => (item=overlay)
+ok: [k8s-w1] => (item=br_netfilter)
+ok: [k8s-w2] => (item=br_netfilter)
+ok: [k8s-cp1] => (item=br_netfilter)
+
+TASK [node_prep : Apply Kubernetes networking sysctls] *************************
+ok: [k8s-cp1] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-w1] => (item={'key': 'net.ipv4.ip_forward', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-cp1] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-w1] => (item={'key': 'net.bridge.bridge-nf-call-iptables', 'value': 1})
+ok: [k8s-w2] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+ok: [k8s-cp1] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+ok: [k8s-w1] => (item={'key': 'net.bridge.bridge-nf-call-ip6tables', 'value': 1})
+
+TASK [node_prep : Install node prerequisites] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Install firewalld] *******************************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Ensure firewalld is running and enabled] *********************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Open the ports this node needs] ******************************
+ok: [k8s-cp1] => (item=10250/tcp)
+ok: [k8s-w1] => (item=10250/tcp)
+ok: [k8s-w2] => (item=10250/tcp)
+ok: [k8s-w2] => (item=10256/tcp)
+ok: [k8s-w1] => (item=10256/tcp)
+ok: [k8s-cp1] => (item=10256/tcp)
+ok: [k8s-w1] => (item=30000-32767/tcp)
+ok: [k8s-w2] => (item=30000-32767/tcp)
+ok: [k8s-cp1] => (item=30000-32767/tcp)
+ok: [k8s-w2] => (item=30000-32767/udp)
+ok: [k8s-w1] => (item=30000-32767/udp)
+ok: [k8s-cp1] => (item=30000-32767/udp)
+ok: [k8s-w1] => (item=179/tcp)
+ok: [k8s-w2] => (item=179/tcp)
+ok: [k8s-cp1] => (item=179/tcp)
+ok: [k8s-cp1] => (item=6443/tcp)
+ok: [k8s-cp1] => (item=2379-2380/tcp)
+ok: [k8s-cp1] => (item=10257/tcp)
+ok: [k8s-cp1] => (item=10259/tcp)
+
+TASK [node_prep : Trust traffic from the pod network] **************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Add the Docker CE repository (provides containerd.io)] *******
+ok: [k8s-cp1]
+ok: [k8s-w2]
+ok: [k8s-w1]
+
+TASK [node_prep : Install containerd] ******************************************
+ok: [k8s-w1]
+ok: [k8s-cp1]
+ok: [k8s-w2]
+
+TASK [node_prep : Read containerd's default configuration] *********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Set the systemd cgroup driver and SELinux labelling] *********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Assert both settings are present] ****************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Write /etc/containerd/config.toml] ***************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Point crictl at containerd] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Ensure containerd is running and enabled] ********************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Apply containerd config changes before installing Kubernetes] ***
+
+TASK [node_prep : Add the pkgs.k8s.io repository for Kubernetes 1.36] **********
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Install kubelet, kubeadm and kubectl 1.36.4] *****************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Install cri-tools (crictl)] **********************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [node_prep : Enable kubelet] **********************************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+PLAY RECAP *********************************************************************
+k8s-cp1                    : ok=30   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w1                     : ok=30   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w2                     : ok=30   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+[13:08:03] exit=0
+
+[2026-11-25 13:09:12] $ ansible-playbook playbooks/verify-node-prep.yml
+
+PLAY [Verify node preparation] *************************************************
+
+TASK [Run node checks] *********************************************************
+ok: [k8s-cp1]
+ok: [k8s-w1]
+ok: [k8s-w2]
+
+TASK [Show check results] ******************************************************
+ok: [k8s-cp1] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-cp1 (control_plane) 2026-11-25 13:09:13
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-cp1
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  port 6443/tcp open in public
+    - PASS  port 2379-2380/tcp open in public
+    - PASS  port 10257/tcp open in public
+    - PASS  port 10259/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-cp1: 40 passed, 0 failed'
+ok: [k8s-w1] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-w1 (worker) 2026-11-25 13:09:13
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-w1
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-w1: 36 passed, 0 failed'
+ok: [k8s-w2] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-w2 (worker) 2026-11-25 13:09:13
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-w2
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-w2: 36 passed, 0 failed'
+
+TASK [Fail if any check failed] ************************************************
+skipping: [k8s-cp1]
+skipping: [k8s-w1]
+skipping: [k8s-w2]
+
+PLAY RECAP *********************************************************************
+k8s-cp1                    : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w1                     : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w2                     : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+[13:09:14] exit=0
+
+[2026-11-25 13:09:54] $ ansible-playbook playbooks/verify-node-prep.yml
+
+PLAY [Verify node preparation] *************************************************
+
+TASK [Run node checks] *********************************************************
+ok: [k8s-w2]
+ok: [k8s-w1]
+ok: [k8s-cp1]
+
+TASK [Show check results] ******************************************************
+ok: [k8s-cp1] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-cp1 (control_plane) 2026-11-25 13:09:54
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-cp1
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  port 6443/tcp open in public
+    - PASS  port 2379-2380/tcp open in public
+    - PASS  port 10257/tcp open in public
+    - PASS  port 10259/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-cp1: 40 passed, 0 failed'
+ok: [k8s-w1] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-w1 (worker) 2026-11-25 13:09:54
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-w1
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-w1: 36 passed, 0 failed'
+ok: [k8s-w2] => 
+    node_prep_verify.stdout_lines:
+    - == k8s-w2 (worker) 2026-11-25 13:09:54
+    - PASS  OS is centos 10
+    - PASS  hostname is k8s-w2
+    - PASS  resolves k8s-cp1
+    - PASS  resolves k8s-w1
+    - PASS  resolves k8s-w2
+    - PASS  SELinux is Enforcing
+    - PASS  chronyd is running
+    - PASS  clock is NTP synchronised
+    - PASS  no active swap
+    - PASS  no active swap entry in /etc/fstab
+    - PASS  module overlay loaded
+    - PASS  module overlay loads at boot
+    - PASS  module br_netfilter loaded
+    - PASS  module br_netfilter loads at boot
+    - PASS  net.ipv4.ip_forward = 1
+    - PASS  net.bridge.bridge-nf-call-iptables = 1
+    - PASS  net.bridge.bridge-nf-call-ip6tables = 1
+    - PASS  firewalld is running
+    - PASS  default interface enp0s1 is in zone public
+    - PASS  port 10250/tcp open in public
+    - PASS  port 10256/tcp open in public
+    - PASS  port 30000-32767/tcp open in public
+    - PASS  port 30000-32767/udp open in public
+    - PASS  port 179/tcp open in public
+    - PASS  pod CIDR 10.244.0.0/16 is a trusted source
+    - PASS  containerd is running
+    - PASS  containerd is enabled
+    - PASS  containerd uses the systemd cgroup driver
+    - PASS  containerd labels containers for SELinux
+    - PASS  crictl is installed
+    - PASS  CRI plugin answers crictl
+    - PASS  kubelet is 1.36.4
+    - PASS  kubeadm is 1.36.4
+    - PASS  kubectl is 1.36.4
+    - PASS  Kubernetes packages excluded from dnf upgrades
+    - PASS  kubelet is enabled
+    - '== k8s-w2: 36 passed, 0 failed'
+
+TASK [Fail if any check failed] ************************************************
+skipping: [k8s-cp1]
+skipping: [k8s-w1]
+skipping: [k8s-w2]
+
+PLAY RECAP *********************************************************************
+k8s-cp1                    : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w1                     : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-w2                     : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+
+[13:09:55] exit=0
+
+[2026-11-25 13:10:09] $ ssh root@192.168.0.110 systemctl status kubelet --no-pager
+● kubelet.service - kubelet: The Kubernetes Node Agent
+     Loaded: loaded (/usr/lib/systemd/system/kubelet.service; enabled; preset: disabled)
+    Drop-In: /usr/lib/systemd/system/kubelet.service.d
+             └─10-kubeadm.conf
+     Active: activating (auto-restart) (Result: exit-code) since Wed 2026-11-25 13:10:05 GMT; 4s ago
+ Invocation: 381689b927324781bf388c8b034aadfa
+       Docs: https://kubernetes.io/docs/
+    Process: 18662 ExecStart=/usr/bin/kubelet $KUBELET_KUBECONFIG_ARGS $KUBELET_CONFIG_ARGS $KUBELET_KUBEADM_ARGS $KUBELET_EXTRA_ARGS (code=exited, status=1/FAILURE)
+   Main PID: 18662 (code=exited, status=1/FAILURE)
+   Mem peak: 16.7M
+        CPU: 77ms
+[13:10:10] exit=3

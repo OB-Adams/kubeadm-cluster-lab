@@ -1,0 +1,30 @@
+---
+- name: Install firewalld
+  ansible.builtin.dnf:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is running and enabled
+  ansible.builtin.systemd_service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Open the ports this node needs
+  ansible.posix.firewalld:
+    zone: "{{ fw_zone }}"
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ node_fw_ports }}"
+
+# Traffic sourced from pod IPs is accepted by firewalld so that Calico's
+# own rules, including NetworkPolicy, make the forwarding decision.
+- name: Trust traffic from the pod network
+  ansible.posix.firewalld:
+    zone: trusted
+    source: "{{ pod_cidr }}"
+    permanent: true
+    immediate: true
+    state: enabled

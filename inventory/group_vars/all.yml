@@ -1,0 +1,45 @@
+---
+# Node operating system, checked by the role before it changes anything.
+node_os_distribution: CentOS   # Ansible distribution fact
+node_os_id: centos             # ID in /etc/os-release
+node_os_major: "10"
+
+# Kubernetes version. pkgs.k8s.io publishes one repository per minor version,
+# so the repository URL is derived from k8s_version.
+k8s_version: "1.36.4"
+k8s_minor_version: "{{ k8s_version.split('.')[0:2] | join('.') }}"
+
+# Cluster address ranges. Calico's default pod pool (192.168.0.0/16) overlaps
+# the node LAN (192.168.0.0/24), so the pod CIDR is set explicitly.
+pod_cidr: 10.244.0.0/16
+service_cidr: 10.96.0.0/12
+
+# Calico routing mode: bgp (native routing, no encapsulation) or vxlan.
+calico_routing_mode: bgp
+
+# firewalld
+fw_zone: public
+
+fw_ports_all_nodes:
+  - 10250/tcp        # kubelet API
+  - 10256/tcp        # kube-proxy health check
+  - 30000-32767/tcp  # NodePort Services
+  - 30000-32767/udp  # NodePort Services
+
+fw_ports_control_plane:
+  - 6443/tcp         # kube-apiserver
+  - 2379-2380/tcp    # etcd client and peer
+  - 10257/tcp        # kube-controller-manager
+  - 10259/tcp        # kube-scheduler
+
+fw_ports_calico:
+  bgp:
+    - 179/tcp        # BGP between calico-node (BIRD) instances
+  vxlan:
+    - 4789/udp       # VXLAN encapsulation
+
+# Ports this host must open, evaluated per host from its inventory groups.
+node_fw_ports: >-
+  {{ fw_ports_all_nodes
+     + fw_ports_calico[calico_routing_mode]
+     + (fw_ports_control_plane if 'control_plane' in group_names else []) }}

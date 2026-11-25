@@ -1,0 +1,5 @@
+---
+- name: Install node prerequisites
+  ansible.builtin.dnf:
+    name: "{{ node_prep_base_packages }}"
+    state: present

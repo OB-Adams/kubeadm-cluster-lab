@@ -1,0 +1,18 @@
+---
+- name: Assert the host runs the expected operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] == node_os_distribution
+      - ansible_facts['distribution_major_version'] == node_os_major
+    fail_msg: >-
+      Expected {{ node_os_distribution }} {{ node_os_major }}, found
+      {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}
+    quiet: true
+
+- name: Assert SELinux is enforcing
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['selinux']['status'] == 'enabled'
+      - ansible_facts['selinux']['mode'] == 'enforcing'
+    fail_msg: "SELinux must stay enforcing. Current mode: {{ ansible_facts['selinux']['mode'] | default('disabled') }}"
+    quiet: true

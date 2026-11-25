@@ -1,0 +1,25 @@
+---
+- name: Load required kernel modules at boot
+  ansible.builtin.template:
+    src: k8s-modules.conf.j2
+    dest: /etc/modules-load.d/k8s.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Load required kernel modules now
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ node_prep_kernel_modules }}"
+
+# The net.bridge.* keys only exist once br_netfilter is loaded,
+# so this must run after the modprobe task.
+- name: Apply Kubernetes networking sysctls
+  ansible.posix.sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/99-kubernetes.conf
+    state: present
+    reload: true
+  loop: "{{ node_prep_sysctls | dict2items }}"
