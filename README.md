@@ -10,7 +10,9 @@ The project is also preparation for the Certified Kubernetes Administrator (CKA)
 |---|---|---|
 | 1. Node preparation | Ansible role: time sync, swap, kernel modules, sysctls, firewalld, containerd, pinned kube packages | Complete |
 | 2. Bootstrap | `kubeadm init`, worker joins, what kubeadm creates | Complete |
-| 3. Networking | Calico CNI, MetalLB, Gateway API | Planned |
+| 3a. Pod networking | Calico 3.33, nftables data plane, native BGP routing | Complete |
+| 3b. LoadBalancer IPs | MetalLB in layer 2 mode | Planned |
+| 3c. HTTP routing | Gateway API | Planned |
 | 4. Storage | NFS server, csi-driver-nfs dynamic provisioning | Planned |
 | 5. Workloads | Deployment, Postgres StatefulSet, RBAC-limited user, NetworkPolicy | Planned |
 | 6. Observability | Grafana Alloy to Prometheus, Loki and Grafana | Planned |
@@ -61,6 +63,9 @@ kubeadm-cluster-lab/
 ├── kubeadm/
 │   ├── kubeadm-config.yaml       # kubeadm init configuration (v1beta4)
 │   └── patches/                  # static Pod patches: control plane runs as spc_t
+├── calico/
+│   ├── custom-resources.yaml     # Calico Installation: IP pool, nftables, BGP
+│   └── networkmanager-calico.conf # keeps NetworkManager off Calico's interfaces
 ├── inventory/
 │   ├── hosts.yml                 # control_plane and workers groups
 │   └── group_vars/all.yml        # versions, CIDRs, firewall ports
@@ -74,7 +79,8 @@ kubeadm-cluster-lab/
 │   └── verify-node-prep.sh       # per-node acceptance checks
 ├── docs/
 │   ├── milestone-1-node-prep.md
-│   └── milestone-2-bootstrap.md
+│   ├── milestone-2-bootstrap.md
+│   └── milestone-3a-calico.md
 ├── logs/                         # recorded session logs
 └── screenshots/
 ```
